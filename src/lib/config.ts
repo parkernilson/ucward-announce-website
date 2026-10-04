@@ -1,7 +1,7 @@
 // Site-wide details shown on the landing page, privacy policy, and terms.
 export const site = {
 	name: 'UC Ward Announcements',
-	// Prefix on every outgoing text. Channel messages add the channel: "UC Ward (EQ): <message>".
+	// Prefix on every outgoing text: "UC Ward: <message>".
 	smsPrefix: 'UC Ward',
 	ward: 'University City Ward (San Diego) of The Church of Jesus Christ of Latter-day Saints',
 	// Operator's full legal name; the footer's "operated by" line links it to the brand.
@@ -21,19 +21,14 @@ export function qrPayload(): string {
 }
 
 // Same thing as a link, for tapping on a phone. "?&body=" works on both iOS and Android.
-export function smsLink(channel?: string): string {
+export function smsLink(): string {
 	return `sms:${site.phoneNumberE164}?&body=JOIN`;
 }
 
 // Disclosure printed on every QR code poster, next to the code. It is what AWS reviews as the
 // opt-in workflow, so keep it in sync with the printed posters and the toll-free registration.
-export function posterDisclosure(channel?: string): string {
-	return `
-	Scan to receive text message updates including public announcements and alerts. 
-	Message frequency may vary. 
-	Message and data rates may apply. 
-	Reply HELP for help or STOP to opt-out. 
-	`
+export function posterDisclosure(): string {
+	return `Scan to receive ${site.name} text messages, including public announcements and alerts. Message frequency may vary. Message and data rates may apply. Reply HELP for help or STOP to opt-out.`;
 }
 
 // Reply sent after someone texts JOIN. MUST match `joined` in shout-cdk's
