@@ -2,29 +2,35 @@
 	import { site } from '$lib/config';
 </script>
 
-<svelte:head><title>Privacy Policy — {site.name}</title></svelte:head>
+<svelte:head>
+	<title>Privacy Policy — {site.name}</title>
+	<meta
+		name="description"
+		content="How {site.name} collects and uses your mobile number. Mobile information is never shared with third parties for marketing."
+	/>
+</svelte:head>
 
 <article class="space-y-4">
 	<h1 class="text-3xl font-bold">Privacy Policy</h1>
 	<p class="text-sm text-gray-500">Last updated: {site.lastUpdated}</p>
 
 	<p>
-		{site.name} is a free, non-commercial SMS announcement service operated personally by {site.operator}.
-		This policy explains what information we collect and how it is used.
+		{site.name} is a free, non-commercial SMS announcement service for the {site.ward}, operated
+		personally by {site.operator}. This policy explains what information we collect and how it is
+		used.
 	</p>
 
 	<h2 class="pt-2 text-xl font-semibold">Information we collect</h2>
 	<p>
-		We collect only the name and mobile phone number you give us, whether on a paper or online
-		sign-up sheet or in person, and a record of your consent and opt-out requests (such as how and
-		when you signed up, your {site.confirmKeyword} reply, or a STOP reply). Sign-up sheets and records
-		are kept privately by {site.operator}.
+		We collect only the mobile phone number you text us from, which channels you join or leave, and
+		a record of your consent and opt-out requests (such as when you texted {site.joinKeyword},
+		{site.leaveKeyword}, or STOP). These records are kept privately by {site.operator}.
 	</p>
 
 	<h2 class="pt-2 text-xl font-semibold">How we use it</h2>
 	<p>
-		Your phone number is used only to send you {site.name} announcements and reminders and to respond
-		to {site.confirmKeyword}, HELP, and STOP replies.
+		Your phone number is used only to send you announcements and reminders for the channels you
+		joined and to respond to {site.joinKeyword}, {site.leaveKeyword}, HELP, and STOP messages.
 	</p>
 
 	<h2 class="pt-2 text-xl font-semibold">Sharing</h2>
@@ -37,8 +43,8 @@
 
 	<h2 class="pt-2 text-xl font-semibold">Retention and deletion</h2>
 	<p>
-		When you reply STOP, you are removed from the announcement list. We may keep a record of the
-		opt-out so we don't message you again. To have your information deleted entirely, email
+		When you reply STOP, you are removed from every channel. We may keep a record of the opt-out so
+		we don't message you again. To have your information deleted entirely, email
 		<a href="mailto:{site.contactEmail}" class="underline">{site.contactEmail}</a>.
 	</p>
 

@@ -1,8 +1,8 @@
-# Shout
+# UC Ward Announcements
 
-Shout is a simple SMS announcement service for the local community. Residents sign up on a paper or online sign-up sheet or verbally in person, confirm by replying **YES** to a confirmation text, and can opt out at any time by replying **STOP**.
+UC Ward Announcements is a simple SMS announcement service for the University City Ward (San Diego) of The Church of Jesus Christ of Latter-day Saints. People opt in by scanning a QR code on a printed poster, which opens their messaging app with **JOIN** (or **JOIN <channel>**) filled in, texted to the toll-free number. They can leave a channel with **LEAVE <channel>** and opt out of everything at any time by replying **STOP**.
 
-This repo contains the Shout website, built with SvelteKit, TypeScript, and Tailwind CSS.
+This repo contains the UC Ward Announcements website, built with SvelteKit, TypeScript, and Tailwind CSS. (The repo, package, and domain still use the old `shout` name; see "Deployment".)
 
 ## Development
 
@@ -23,28 +23,32 @@ npm run format   # auto-format
 
 ## Project structure
 
-- `src/routes/+page.svelte` — landing page (sign-up process, sign-up sheet consent wording, verbal sign-up script, confirmation text, how to opt out)
+- `src/routes/+page.svelte` — landing page (how to sign up with the QR code or by texting JOIN, the poster disclosure, the confirmation text, channels, how to opt out)
 - `src/routes/privacy/` — privacy policy
 - `src/routes/terms/` — terms and conditions
-- `src/routes/+layout.svelte` — shared header/footer; `+layout.ts` disables SSR (client-side rendered) and prerenders each route's HTML shell
-- `src/lib/config.ts` — site details (operator's full legal name, toll-free number, contact email, confirm keyword, message frequency, last-updated date), plus the sign-up sheet consent statement (`signupConsent`), the verbal sign-up script (`verbalScript`), and the confirmation text (`confirmationMessage`). Contact info on the site is email-only; never add a personal phone number.
+- `src/routes/+layout.svelte` — shared header/footer; `+layout.ts` turns on prerendering, so every page is built to complete static HTML (see "Prerendering")
+- `src/lib/config.ts` — site details (brand name and `UC Ward` SMS prefix, ward name, operator's full legal name, toll-free number, contact email, JOIN/LEAVE keywords, channel codes, default channel, last-updated date), plus helpers for the channel prefix (`channelPrefix`), the join text, the QR code payload (`qrPayload`), the tap-to-text link (`smsLink`), the poster disclosure (`posterDisclosure`), and the confirmation text (`joinConfirmation`). Contact info on the site is email-only; never add a personal phone number.
 
 ## SMS opt-in flow
 
-1. **Sign-up.** People give their name and mobile number in one of two ways:
-   - **Sign-up sheet (paper or online).** The sheet shows the consent statement from `signupConsent` in `src/lib/config.ts`.
-   - **Verbally, in person.** The operator reads `verbalScript` aloud first, then records the name, number, date, and that the script was read.
-2. **Confirmation text.** However the number was collected, it gets one message (`confirmationMessage`) from the toll-free number +1 (844) 493-3651 asking the person to reply **YES**. Nothing else is sent until they reply.
-3. **YES reply.** Requires **two-way SMS** to be enabled on the number in AWS End User Messaging so replies reach an SNS topic; only numbers that reply YES get announcements. Keep records of sign-up dates and YES replies.
-4. **Opt-out.** On US toll-free numbers, **STOP** and **UNSTOP** are handled by the carriers automatically and can't be customized. Configure a **HELP** response in AWS that includes the contact email.
+1. **QR code poster.** Each printed poster has a QR code plus the disclosure from `posterDisclosure()` in `src/lib/config.ts`. The QR code encodes `qrPayload()`: `SMSTO:+18444933651:JOIN` for the default channel, or `SMSTO:+18444933651:JOIN RS` for a poster for channel `RS`. The channels (`site.channels`) are `ALL` (whole ward: announcements that apply to everyone), `EQ` (Elders Quorum), `RS` (Relief Society), `YM` (Young Men), `YW` (Young Women), `PR` (Primary), and `NR` (Nursery). Scanning it opens the phone's messaging app with the text filled in. People without a poster can text JOIN themselves or tap the `smsLink()` link on the landing page.
+2. **JOIN.** Texting **JOIN** subscribes the number to the default channel, **EQ**; **JOIN <channel>** subscribes it to that channel. The backend replies once with `joinConfirmation()`. Nothing is ever sent to a number that hasn't texted JOIN. Requires **two-way SMS** on the number in AWS End User Messaging so incoming texts reach the backend; keep records of when each number joined.
+3. **LEAVE <channel>** unsubscribes the number from that channel only. A bare **LEAVE** leaves the default channel.
+4. **STOP** unsubscribes the number from every channel. On US toll-free numbers, **STOP** and **START**/**UNSTOP** are handled by the carriers automatically and can't be customized. Configure a **HELP** response in AWS that includes the contact email and the JOIN/LEAVE/STOP keywords.
 
-If you change the sign-up wording, update the paper and online sheets, the verbal script, `config.ts`, and the AWS toll-free registration together.
+Outgoing texts about a channel start with that channel, `UC Ward (<channel>):` (announcements are `UC Ward (EQ): <announcement>`). Messages not tied to a channel start with `UC Ward:`. The disclosures say "message frequency varies" (no monthly cap) and "message and data rates may apply".
+
+If you change the opt-in wording, update the printed posters, `config.ts`, the backend messages in `shout-cdk`, and the AWS toll-free registration together.
 
 - `static/` — static assets
 
+## Prerendering
+
+Every page is prerendered (`export const prerender = true` in `src/routes/+layout.ts`, with SSR left on), so `build/index.html`, `privacy.html`, and `terms.html` contain the full page text. Crawlers and the toll-free verification reviewers read the content without running JavaScript; an earlier client-side-only build (`ssr = false`) was rejected as "inaccessible" because its HTML was an empty shell. Keep these pages prerendered with SSR on. A page that can only run in the browser (such as the planned admin dashboard, which uses Amplify) can set `export const ssr = false` in its own `+page.ts` or `+layout.ts` without affecting the public pages.
+
 ## Admin dashboard (planned)
 
-A signed-in admin dashboard will let the operator manage channels, see each channel's receivers (name, phone number, status), manually add or remove numbers (adding a number that has never been invited sends it the `confirmationMessage` invitation), and send announcements to a channel's subscribed receivers. The AWS side (Cognito, API Gateway, Lambdas, DynamoDB) is defined in the sibling `shout-cdk` repo; see its `README.md`.
+A signed-in admin dashboard will let the operator manage channels (each has a short keyword code such as `EQ` or `RS`, used in `JOIN <code>`), see each channel's receivers (phone number, status, join date), remove numbers from a channel, and send announcements to a channel's subscribed receivers. Admins can't add numbers: people only join by texting JOIN. The AWS side (Cognito, API Gateway, Lambdas, DynamoDB) is defined in the sibling `shout-cdk` repo; see its `README.md`.
 
 - **Auth:** Cognito user pool with self-sign-up turned off; admin users are created by hand. Sign-in uses Cognito **managed login** with an app client that has **no client secret**, using the **authorization code flow with PKCE** (scopes `openid`, `email`).
 - **Callback / sign-out URLs:** `https://shout.parkernilson.dev/` in production and `http://localhost:5173/` for development (`npm run dev`). Because the callback is the site root, Amplify must be configured in the root layout so the redirect is handled on `/`.
@@ -60,9 +64,9 @@ A signed-in admin dashboard will let the operator manage channels, see each chan
 
 ## Deployment
 
-Uses `@sveltejs/adapter-static`. `npm run build` writes a static site to `build/` (`index.html`, `privacy.html`, `terms.html`, plus `404.html` as the SPA fallback).
+Uses `@sveltejs/adapter-static`. `npm run build` writes a static site to `build/`: prerendered `index.html`, `privacy.html`, and `terms.html`, plus `404.html` as the SPA fallback.
 
-The site is hosted on **GitHub Pages** at <https://shout.parkernilson.dev>. `.github/workflows/deploy.yml` runs `check`, `lint`, and `build` on every push to `main` (or a manual run) and deploys `build/` with GitHub Actions.
+The site is hosted on **GitHub Pages** at <https://shout.parkernilson.dev> (the domain predates the UC Ward rebrand; moving it means updating `static/CNAME`, `site.url` in `config.ts`, DNS, the Cognito callback URLs and CORS origins in `shout-cdk`, the posters, and the toll-free registration). `.github/workflows/deploy.yml` runs `check`, `lint`, and `build` on every push to `main` (or a manual run) and deploys `build/` with GitHub Actions.
 
 One-time setup:
 
