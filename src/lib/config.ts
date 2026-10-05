@@ -12,7 +12,7 @@ export const site = {
 	phoneNumberE164: '+18444933651',
 	contactEmail: 'parker.todd.nilson@gmail.com',
 	joinKeyword: 'JOIN',
-	lastUpdated: 'October 4, 2026',
+	lastUpdated: 'October 4, 2026'
 };
 
 // Content of the QR code on a poster: opens the phone's messaging app with the join text filled in.

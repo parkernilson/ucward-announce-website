@@ -28,8 +28,9 @@
 		message of <strong>{site.joinKeyword}</strong> addressed to {site.phoneNumber}, and sending that
 		message. You can also text <strong>{site.joinKeyword}</strong> to {site.phoneNumber} directly. Each
 		poster shows the program disclosures next to the code, and the same QR code and wording are on our
-		<a href={resolve('/')} class="underline">home page</a>. We reply once to confirm your subscription,
-		and then send recurring announcement messages. We never text a number that hasn't texted
+		<a href={resolve('/')} class="underline">home page</a>. We reply once to confirm your
+		subscription, and then send recurring announcement messages. We never text a number that hasn't
+		texted
 		{site.joinKeyword}. Consent is not a condition of any purchase.
 	</p>
 

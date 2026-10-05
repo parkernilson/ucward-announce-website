@@ -16,7 +16,8 @@
 
 <h1 class="mb-4 text-3xl font-bold">Ward announcements by text message</h1>
 <p class="mb-8 text-lg text-gray-700">
-	{site.name} is a free SMS service that sends announcements of upcoming events to members and friends of the
+	{site.name} is a free SMS service that sends announcements of upcoming events to members and friends
+	of the
 	{site.ward} who sign up.
 </p>
 
@@ -29,7 +30,9 @@
 	</div>
 	<p class="text-center text-lg">
 		Scan the code or text <strong>{site.joinKeyword}</strong> to
-		<a class="font-semibold text-blue-600 hover:text-blue-800" href={smsLink()}>{site.phoneNumber}</a>
+		<a class="font-semibold text-blue-600 hover:text-blue-800" href={smsLink()}
+			>{site.phoneNumber}</a
+		>
 	</p>
 	<p class="text-center">{posterDisclosure()}</p>
 	<p>

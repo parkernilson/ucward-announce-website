@@ -23,8 +23,8 @@
 	<h2 class="pt-2 text-xl font-semibold">Information we collect</h2>
 	<p>
 		We collect only the mobile phone number you text us from and a record of your consent and
-		opt-out requests (such as when you texted {site.joinKeyword} or STOP). These records are kept
-		privately by {site.operator}.
+		opt-out requests (such as when you texted {site.joinKeyword} or STOP). These records are kept privately
+		by {site.operator}.
 	</p>
 
 	<h2 class="pt-2 text-xl font-semibold">How we use it</h2>
