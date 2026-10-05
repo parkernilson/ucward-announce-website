@@ -25,11 +25,11 @@
 	<p class="text-center text-sm text-gray-500">
 		This QR code appears on posters displayed at the ward building.
 	</p>
-	<div class="w-48 sm:w-64 [&>svg]:h-auto [&>svg]:w-full" aria-label="QR code to text JOIN">
-		{@html data.joinQr}
-	</div>
+	<img class="w-48 sm:w-64" src={data.joinQr} alt="QR code that texts JOIN to {site.phoneNumber}" />
 	<p class="text-center text-lg">
 		Scan the code or text <strong>{site.joinKeyword}</strong> to
+		<!-- sms: link opens the messaging app; it isn't a route, so resolve() doesn't apply -->
+		<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
 		<a class="font-semibold text-blue-600 hover:text-blue-800" href={smsLink()}
 			>{site.phoneNumber}</a
 		>
