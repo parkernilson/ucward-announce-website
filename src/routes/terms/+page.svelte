@@ -42,8 +42,8 @@
 	<h2 class="pt-2 text-xl font-semibold">Opting out</h2>
 	<p>
 		Reply <strong>STOP</strong> to any message at any time to unsubscribe. You will receive one
-		confirmation message and no further messages. To subscribe again, text
-		<strong>{site.joinKeyword}</strong> to {site.phoneNumber}.
+		confirmation message and no further messages. To subscribe again, reply
+		<strong>START</strong>.
 	</p>
 
 	<h2 class="pt-2 text-xl font-semibold">Help</h2>

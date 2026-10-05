@@ -1,6 +1,6 @@
 # UC Ward Announcements
 
-UC Ward Announcements is a simple SMS announcement service for the University City Ward (San Diego) of The Church of Jesus Christ of Latter-day Saints. People opt in by scanning a QR code on a printed poster, which opens their messaging app with **JOIN** (or **JOIN <channel>**) filled in, texted to the toll-free number. They can leave a channel with **LEAVE <channel>** and opt out of everything at any time by replying **STOP**.
+UC Ward Announcements is a simple SMS announcement service for the University City Ward (San Diego) of The Church of Jesus Christ of Latter-day Saints. People opt in by scanning a QR code on a printed poster, which opens their messaging app with **JOIN** filled in, texted to the toll-free number. They can opt out at any time by replying **STOP**. There's a single subscriber list; there are no channels.
 
 This repo contains the UC Ward Announcements website, built with SvelteKit, TypeScript, and Tailwind CSS. (The repo, package, and domain still use the old `shout` name; see "Deployment".)
 
@@ -23,20 +23,20 @@ npm run format   # auto-format
 
 ## Project structure
 
-- `src/routes/+page.svelte` — landing page (how to sign up with the QR code or by texting JOIN, the poster disclosure, the confirmation text, channels, how to opt out)
+- `src/routes/+page.svelte` — landing page: the poster's QR code (noting that it appears on posters at the ward building), "Scan the code or text JOIN to <number>" with a tap-to-text link, the poster disclosure, and the full privacy policy and terms URLs. It mirrors the printed poster, which is the opt-in AWS reviews.
+- `src/routes/+page.ts` — renders the QR code to an inline SVG at build time with the `qrcode` package
 - `src/routes/privacy/` — privacy policy
 - `src/routes/terms/` — terms and conditions
 - `src/routes/+layout.svelte` — shared header/footer; `+layout.ts` turns on prerendering, so every page is built to complete static HTML (see "Prerendering")
-- `src/lib/config.ts` — site details (brand name and `UC Ward` SMS prefix, ward name, operator's full legal name, toll-free number, contact email, JOIN/LEAVE keywords, channel codes, default channel, last-updated date), plus helpers for the channel prefix (`channelPrefix`), the join text, the QR code payload (`qrPayload`), the tap-to-text link (`smsLink`), the poster disclosure (`posterDisclosure`), and the confirmation text (`joinConfirmation`). Contact info on the site is email-only; never add a personal phone number.
+- `src/lib/config.ts` — site details (brand name and `UC Ward` SMS prefix, ward name, operator's full legal name, toll-free number, contact email, JOIN keyword, last-updated date), plus helpers for the QR code payload (`qrPayload`), the tap-to-text link (`smsLink`), the poster disclosure (`posterDisclosure`), and the confirmation text (`joinConfirmation`). Contact info on the site is email-only; never add a personal phone number.
 
 ## SMS opt-in flow
 
-1. **QR code poster.** Each printed poster has a QR code plus the disclosure from `posterDisclosure()` in `src/lib/config.ts`. The QR code encodes `qrPayload()`: `SMSTO:+18444933651:JOIN` for the default channel, or `SMSTO:+18444933651:JOIN RS` for a poster for channel `RS`. The channels (`site.channels`) are `ALL` (whole ward: announcements that apply to everyone), `EQ` (Elders Quorum), `RS` (Relief Society), `YM` (Young Men), `YW` (Young Women), `PR` (Primary), and `NR` (Nursery). Scanning it opens the phone's messaging app with the text filled in. People without a poster can text JOIN themselves or tap the `smsLink()` link on the landing page.
-2. **JOIN.** Texting **JOIN** subscribes the number to the default channel, **EQ**; **JOIN <channel>** subscribes it to that channel. The backend replies once with `joinConfirmation()`. Nothing is ever sent to a number that hasn't texted JOIN. Requires **two-way SMS** on the number in AWS End User Messaging so incoming texts reach the backend; keep records of when each number joined.
-3. **LEAVE <channel>** unsubscribes the number from that channel only. A bare **LEAVE** leaves the default channel.
-4. **STOP** unsubscribes the number from every channel. On US toll-free numbers, **STOP** and **START**/**UNSTOP** are handled by the carriers automatically and can't be customized. Configure a **HELP** response in AWS that includes the contact email and the JOIN/LEAVE/STOP keywords.
+1. **QR code poster.** Each printed poster has a QR code plus the disclosure from `posterDisclosure()` in `src/lib/config.ts`, which names the program (UC Ward Announcements), says message frequency may vary and message and data rates may apply, and gives the HELP and STOP keywords. The QR code encodes `qrPayload()`, `SMSTO:+18444933651:JOIN`; scanning it opens the phone's messaging app with JOIN filled in. The landing page shows the same code and disclosure, and people can also text JOIN themselves or tap the `smsLink()` link.
+2. **JOIN.** Texting **JOIN** subscribes the number. The backend replies once with `joinConfirmation()`, then sends recurring announcements. Nothing is ever sent to a number that hasn't texted JOIN. Requires **two-way SMS** on the number in AWS End User Messaging so incoming texts reach the backend; keep records of when each number joined.
+3. **STOP** unsubscribes the number. On US toll-free numbers, **STOP** and **START**/**UNSTOP** are handled by the carriers automatically and can't be customized; START resubscribes. Configure a **HELP** response in AWS that includes the contact email and the JOIN/STOP keywords.
 
-Outgoing texts about a channel start with that channel, `UC Ward (<channel>):` (announcements are `UC Ward (EQ): <announcement>`). Messages not tied to a channel start with `UC Ward:`. The disclosures say "message frequency varies" (no monthly cap) and "message and data rates may apply".
+Every outgoing text starts with `UC Ward:` (announcements are `UC Ward: <announcement>`). The disclosures say "message frequency may vary" (no monthly cap) and "message and data rates may apply".
 
 If you change the opt-in wording, update the printed posters, `config.ts`, the backend messages in `shout-cdk`, and the AWS toll-free registration together.
 
@@ -48,7 +48,7 @@ Every page is prerendered (`export const prerender = true` in `src/routes/+layou
 
 ## Admin dashboard (planned)
 
-A signed-in admin dashboard will let the operator manage channels (each has a short keyword code such as `EQ` or `RS`, used in `JOIN <code>`), see each channel's receivers (phone number, status, join date), remove numbers from a channel, and send announcements to a channel's subscribed receivers. Admins can't add numbers: people only join by texting JOIN. The AWS side (Cognito, API Gateway, Lambdas, DynamoDB) is defined in the sibling `shout-cdk` repo; see its `README.md`.
+A signed-in admin dashboard will let the operator see the receivers (phone number, status, join date), remove numbers, and send announcements to every subscribed receiver. Admins can't add numbers: people only join by texting JOIN. The AWS side (Cognito, API Gateway, Lambdas, DynamoDB) is defined in the sibling `shout-cdk` repo; see its `README.md`.
 
 - **Auth:** Cognito user pool with self-sign-up turned off; admin users are created by hand. Sign-in uses Cognito **managed login** with an app client that has **no client secret**, using the **authorization code flow with PKCE** (scopes `openid`, `email`).
 - **Callback / sign-out URLs:** `https://shout.parkernilson.dev/` in production and `http://localhost:5173/` for development (`npm run dev`). Because the callback is the site root, Amplify must be configured in the root layout so the redirect is handled on `/`.
